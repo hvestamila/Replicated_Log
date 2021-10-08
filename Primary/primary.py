@@ -1,5 +1,5 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from messageContainer import MessageContainer
+from message_container import MessageContainer
 
 
 class HttpServer:
@@ -49,4 +49,3 @@ class main:
 
 if __name__ == '__main__':
     m = main()
-
