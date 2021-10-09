@@ -1,0 +1,16 @@
+services:
+  primary:
+    build: primary/
+    command: python ./primary.py
+    ports:
+      - 5000:5000
+
+  secondary_frst:
+    build: secondary_frst/
+    command: python ./secondary.py
+    ports:
+      - 6000:6000
+
+
+    depends_on:
+      - primary
