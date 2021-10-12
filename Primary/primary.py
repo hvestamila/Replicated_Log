@@ -1,51 +1,31 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from message_container import MessageContainer
+from flask import Flask, request
+import requests
+from .message_container import MessageContainer
+
+app = Flask(__name__)
+
+msg_container = MessageContainer()
+
+# primary port = 5000
+secondary_frst_endpoint = 'http://localhost:6000/messages'
+secondary_scnd_endpoint = 'http://localhost:7000/messages'
 
 
-class HttpServer:
-    def __init__(self):
-        self.msg_container = MessageContainer()
+@app.route('/messages', methods=['POST'])
+def save_msg():
+    msg = request.get_json()
+    r_frst = requests.post(secondary_frst_endpoint, json=msg)
+    r_scnd = requests.post(secondary_scnd_endpoint, json=msg)
+    if r_frst.status_code == 201 & r_scnd.status_code == 201:
+        msg_container.append(msg["message"])
+    # Secondary nodes will have the same code
+    # but they will only have request.get_json() and append
 
-        # FOR TESTING PURPOSES 1 MESSAGE IS ADDED TO DICT
-        self.msg_container.append('1', 'Message 1 Test')
-        server = HTTPServer(('localhost', 8000), lambda *args: SimpleHTTPRequestHandler(self.msg_container, *args))
-        server.serve_forever()
+    # to test that the replication is blocking, introduce the delay/sleep on the Secondary
+    # you can use time.sleep(5) to do that
+    return 'New message successfully added', 201
 
 
-class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-
-    def __init__(self, msg_container, *args):
-        self.msg_container = msg_container
-        BaseHTTPRequestHandler.__init__(self, *args)
-
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.end_headers()
-        # RETURN ALL MESSAGES IN MESSAGE CONTAINER:
-        self.wfile.write(self.msg_container.get_all())
-
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        body = self.rfile.read(content_length)
-
-        # Next, we need to
-        # 1. Send a new message to Secondary 1 and Secondary 2
-        # 2. Receive ACK that response_code = 200 for Secondary 1 and Secondary 2
-        # 3. Then append(msg) to dict
-
-        # for now, only append() will work because there is no Secondary created yet
-        self.msg_container.append(len(self.msg_container.msg_container.keys())+1, body)
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(body)
-
-        # This print is to test if the new message appended to dict
-        print(self.msg_container)
-
-class main:
-    def __init__(self):
-        self.server = HttpServer()
-
-if __name__ == '__main__':
-    m = main()
+@app.route('/messages', methods=['GET'])
+def return_msg():
+    return msg_container.get_all(), 200

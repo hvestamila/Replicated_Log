@@ -1,7 +1,7 @@
 services:
   primary:
-    build: primary/
-    command: python ./primary.py
+    build: Primary/
+    command: flask run
     ports:
       - 5000:5000
 

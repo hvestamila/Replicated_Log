@@ -1,10 +1,17 @@
-FROM python:3.7-alpine
+FROM python:3.9-alpine
 
-ADD primary.py /primary/
-ADD message_container.py /primary/
-RUN apk add --no-cache gcc musl-dev linux-headers
-COPY requirements.txt requirements.txt /primary/
-RUN pip3 install -r primary/requirements.txt
+WORKDIR /Primary
+
+ENV FLASK_APP primary
+ENV FLASK_DEBUG 1
+
+RUN apk add --no-cache gcc musl-dev linux-headers libffi-dev g++
+
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+
 EXPOSE 5000
-COPY . .
-WORKDIR /primary/
+
+COPY *.py .
+
+CMD ["flask", "run"]
