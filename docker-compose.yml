@@ -1,16 +1,45 @@
+version: "3.4"
+
 services:
   primary:
     build: Primary/
-    command: flask run
+    environment:
+      - SECONDARY_FRST_BASE_PATH=http://secondary_frst:5001
+      - FLASK_DEBUG=1
+      - SECONDARY_SCND_BASE_PATH=http://secondary_scnd:5001
+    command: python ./primary.py
     ports:
-      - 5000:5000
+      - "5000:5000"
+    networks:
+      - replicated-log-network-secondary-frst
+      - replicated-log-network-secondary-scnd
 
   secondary_frst:
     build: secondary_frst/
+    environment:
+      - FLASK_DEBUG=1
     command: python ./secondary.py
     ports:
-      - 6000:6000
-
-
+      - "5001:5001"
+    networks:
+      - replicated-log-network-secondary-frst
     depends_on:
       - primary
+
+  secondary_scnd:
+    build: secondary_frst/
+    environment:
+      - FLASK_DEBUG=1
+    command: python ./secondary.py
+    ports:
+      - "5002:5001"
+    networks:
+      - replicated-log-network-secondary-scnd
+    depends_on:
+      - primary
+
+networks:
+  replicated-log-network-secondary-frst:
+    driver: bridge
+  replicated-log-network-secondary-scnd:
+    driver: bridge
