@@ -1,6 +1,5 @@
 from flask import Flask, request
 from message_container import MessageContainer
-import requests
 import random
 import time
 
@@ -8,22 +7,21 @@ app = Flask(__name__)
 
 msg_container = MessageContainer()
 
-# primary port = 5000
 
-
-@app.route('/')
+@app.route('/health')
 def index():
-    return "hello world from secondary"
+    return 'OK'
+
 
 @app.route('/messages', methods=['POST'])
 def save_msg():
     msg = request.get_json()
-
     delay = random.randint(1, 10)
-    time.sleep(delay)
+    time.sleep(5)
     msg_container.append(msg["message"])
 
     return 'New message successfully added to secondary', 201
+
 
 @app.route('/messages', methods=['GET'])
 def return_msg():
@@ -31,4 +29,4 @@ def return_msg():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5001)
