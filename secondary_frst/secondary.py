@@ -17,7 +17,7 @@ def index():
 def save_msg():
     msg = request.get_json()
     delay = random.randint(1, 10)
-    time.sleep(5)
+    time.sleep(delay)
     msg_container.append(msg["message"])
 
     return 'New message successfully added to secondary', 201
