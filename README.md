@@ -10,7 +10,7 @@ It contains the following files:
 Ports:
 1. primary: "5000:5000"
 2. secondary_frst: "5001:5001"
-3. secondary_scnd: "5002:5001"
+3. secondary_scnd: "5002:5002"
 ****
 
 Use the following steps to start Docker:
