@@ -59,7 +59,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:7000/messages",
+					"raw": "http://localhost:5001/messages",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -78,7 +78,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:6000/messages",
+					"raw": "http://localhost:5002/messages",
 					"protocol": "http",
 					"host": [
 						"localhost"
