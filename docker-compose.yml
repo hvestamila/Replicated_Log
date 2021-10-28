@@ -18,6 +18,7 @@ services:
     build: secondary_frst/
     environment:
       - FLASK_DEBUG=1
+      - DELAY=5
     command: python ./secondary.py
     ports:
       - "5001:5001"
@@ -30,6 +31,7 @@ services:
     build: secondary_frst/
     environment:
       - FLASK_DEBUG=1
+      - DELAY=10
     command: python ./secondary.py
     ports:
       - "5002:5001"

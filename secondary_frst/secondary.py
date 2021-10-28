@@ -2,10 +2,13 @@ from flask import Flask, request
 from message_container import MessageContainer
 import random
 import time
+import os
 
 app = Flask(__name__)
 
 msg_container = MessageContainer()
+
+DELAY = int(os.getenv('DELAY', random.randint(1, 10)))
 
 
 @app.route('/health')
@@ -16,8 +19,7 @@ def index():
 @app.route('/messages', methods=['POST'])
 def save_msg():
     msg = request.get_json()
-    delay = random.randint(1, 10)
-    time.sleep(delay)
+    time.sleep(DELAY)
     msg_container.append(msg["message"])
 
     return 'New message successfully added to secondary', 201
