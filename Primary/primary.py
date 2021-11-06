@@ -17,9 +17,16 @@ def index():
 @app.route('/messages', methods=['POST'])
 def save_msg():
     msg = request.get_json()
-    res = multi_threaded_process.replicate_message(msg)
+    write_concern = int(request.args.get('w', default=1)) - 1   # total number - primary = number of secondaries
 
-    if res == len(multi_threaded_process.endpoints):
+    if write_concern > len(multi_threaded_process.endpoints):
+        write_concern = len(multi_threaded_process.endpoints)
+    elif write_concern < 0:
+        write_concern = 0
+
+    ack_count = multi_threaded_process.replicate_message(msg, write_concern)
+
+    if ack_count == write_concern:
         msg_container.append(msg["message"])
 
     return 'New message successfully added', 201
