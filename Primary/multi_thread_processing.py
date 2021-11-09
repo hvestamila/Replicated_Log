@@ -12,8 +12,9 @@ class MultiThreadProcessing:
         self.endpoints = [SECONDARY_FRST + '/messages', SECONDARY_SCND + '/messages']
         print(self.endpoints)
 
-    def replicate_message(self, msg, w):
+    def replicate_message(self, msg_id, msg, w):
         ack_count = 0
+        msg["msg_id"] = msg_id
 
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=len(self.endpoints))
         results = list(map(lambda endpoint: executor.submit(requests.post, endpoint, json=msg), self.endpoints))
