@@ -18,9 +18,9 @@ def index():
 
 @app.route('/messages', methods=['POST'])
 def save_msg():
-    msg = request.get_json()
+    data = request.get_json()
     time.sleep(DELAY)
-    msg_container.append(msg["message"])
+    msg_container.append(data["msg_id"], data["message"])
 
     return 'New message successfully added to secondary', 201
 

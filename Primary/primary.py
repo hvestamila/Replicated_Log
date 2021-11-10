@@ -1,6 +1,8 @@
 from flask import Flask, request
 from message_container import MessageContainer
 from multi_thread_processing import MultiThreadProcessing
+# from uuid import uuid4
+
 
 app = Flask(__name__)
 
@@ -18,16 +20,16 @@ def index():
 def save_msg():
     msg = request.get_json()
     write_concern = int(request.args.get('w', default=1)) - 1   # total number - primary = number of secondaries
+    msg_id = msg_container.length() + 1
 
     if write_concern > len(multi_threaded_process.endpoints):
         write_concern = len(multi_threaded_process.endpoints)
     elif write_concern < 0:
         write_concern = 0
 
-    ack_count = multi_threaded_process.replicate_message(msg, write_concern)
+    multi_threaded_process.replicate_message(msg_id, msg, write_concern)
 
-    if ack_count == write_concern:
-        msg_container.append(msg["message"])
+    msg_container.append(msg_id, msg["message"])
 
     return 'New message successfully added', 201
 
