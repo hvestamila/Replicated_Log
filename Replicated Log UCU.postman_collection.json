@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"message\": \"Message \"\n}",
+					"raw": "{\n    \"message\": \"Message Test\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -21,7 +21,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:5000/messages",
+					"raw": "http://localhost:5000/messages?w=3",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -29,6 +29,12 @@
 					"port": "5000",
 					"path": [
 						"messages"
+					],
+					"query": [
+						{
+							"key": "w",
+							"value": "3"
+						}
 					]
 				}
 			},
@@ -55,16 +61,28 @@
 		},
 		{
 			"name": "GET from Secondary 1 (port= 5001)",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "http://localhost:5001/messages",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "7000",
+					"port": "5001",
 					"path": [
 						"messages"
 					]
@@ -83,7 +101,7 @@
 					"host": [
 						"localhost"
 					],
-					"port": "6000",
+					"port": "5002",
 					"path": [
 						"messages"
 					]
