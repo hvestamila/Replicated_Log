@@ -2,7 +2,8 @@ from flask import Flask, request
 from message_container import MessageContainer
 from multi_thread_processing import MultiThreadProcessing
 # from uuid import uuid4
-
+import sys
+sys.stdout.flush()
 
 app = Flask(__name__)
 
@@ -27,12 +28,12 @@ def save_msg():
     elif write_concern < 0:
         write_concern = 0
 
-    multi_threaded_process.replicate_message(msg_id, msg, write_concern)
+    writes_successfully = multi_threaded_process.replicate_message(msg_id, msg, write_concern)
 
     msg_container.append(msg_id, msg["message"])
+    print(writes_successfully, write_concern)
 
     return 'New message successfully added', 201
-
 
 @app.route('/messages', methods=['GET'])
 def return_msg():
