@@ -2,14 +2,18 @@ from flask import Flask, request
 from message_container import MessageContainer
 from multi_thread_processing import MultiThreadProcessing
 # from uuid import uuid4
-import sys
-sys.stdout.flush()
 
 app = Flask(__name__)
 
 msg_container = MessageContainer()
 
 multi_threaded_process = MultiThreadProcessing()
+g_uid = 0
+
+def get_next_uid():
+    global g_uid
+    g_uid = g_uid + 1
+    return g_uid
 
 
 @app.route('/health')
@@ -19,18 +23,29 @@ def index():
 
 @app.route('/messages', methods=['POST'])
 def save_msg():
-    msg = request.get_json()
-    write_concern = int(request.args.get('w', default=1)) - 1   # total number - primary = number of secondaries
-    msg_id = msg_container.length() + 1
+    income_msg = request.get_json()
+
+    msg = dict()
+    try:
+        msg["message"] = income_msg["message"]
+    except:
+        return 'The field "message"  was not found in JSON', 400
+    try:
+        write_concern = int(income_msg["write_concern"]) - 1
+    except:
+        write_concern = len(multi_threaded_process.endpoints)
+        print("Missing write_concern parameter in JSON")
+
+    msg_id = get_next_uid()
 
     if write_concern > len(multi_threaded_process.endpoints):
         write_concern = len(multi_threaded_process.endpoints)
     elif write_concern < 0:
         write_concern = 0
+    msg_container.append(msg_id, msg["message"])
 
     writes_successfully = multi_threaded_process.replicate_message(msg_id, msg, write_concern)
 
-    msg_container.append(msg_id, msg["message"])
     print(writes_successfully, write_concern)
 
     return 'New message successfully added', 201
