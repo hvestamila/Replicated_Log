@@ -1,6 +1,7 @@
 from flask import Flask, request
 from message_container import MessageContainer
 from multi_thread_processing import MultiThreadProcessing
+
 # from uuid import uuid4
 
 app = Flask(__name__)
@@ -9,6 +10,7 @@ msg_container = MessageContainer()
 
 multi_threaded_process = MultiThreadProcessing()
 g_uid = 0
+
 
 def get_next_uid():
     global g_uid
@@ -29,12 +31,14 @@ def save_msg():
     try:
         msg["message"] = income_msg["message"]
     except:
-        return 'The field "message"  was not found in JSON', 400
+        app.logger.error(f'The field "message" was not found in JSON')
+        return 'The field "message" was not found in JSON', 400
+
     try:
         write_concern = int(income_msg["write_concern"]) - 1
     except:
         write_concern = len(multi_threaded_process.endpoints)
-        print("Missing write_concern parameter in JSON")
+        app.logger.info(f'Missing write_concern parameter in JSON. Replaced with {write_concern}')
 
     msg_id = get_next_uid()
 
@@ -44,11 +48,12 @@ def save_msg():
         write_concern = 0
     msg_container.append(msg_id, msg["message"])
 
-    writes_successfully = multi_threaded_process.replicate_message(msg_id, msg, write_concern)
+    writes_successfully = multi_threaded_process.replicate_message(msg_id, msg, write_concern, app.logger)
 
-    print(writes_successfully, write_concern)
+    app.logger.info(f'Number of successful writes to secondary: {writes_successfully}. Write concern: {write_concern + 1}')
 
     return 'New message successfully added', 201
+
 
 @app.route('/messages', methods=['GET'])
 def return_msg():
