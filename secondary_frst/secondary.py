@@ -20,7 +20,9 @@ def index():
 def save_msg():
     data = request.get_json()
     time.sleep(DELAY)
-    msg_container.append(data["msg_id"], data["message"])
+    key, msg = int(data["msg_id"]), data["message"]
+    if key not in msg_container.messages.keys():
+        msg_container.append(key, msg)
 
     return 'New message successfully added to secondary', 201
 
