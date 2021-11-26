@@ -3,6 +3,7 @@ import requests
 import os
 import time
 
+
 SECONDARY_FRST = os.getenv('SECONDARY_FRST_BASE_PATH', 'http://localhost:5001')
 SECONDARY_SCND = os.getenv('SECONDARY_SCND_BASE_PATH', 'http://localhost:5002')
 
@@ -13,7 +14,19 @@ class MultiThreadProcessing:
 
     def __init__(self):
         self.endpoints = [SECONDARY_FRST + '/messages', SECONDARY_SCND + '/messages']
-        print(self.endpoints)
+        # print(self.endpoints)
+
+
+    def health_tick(self, url, logger):
+        while True:
+            try:
+                status = requests.get(url=url).status_code
+            except Exception:
+                status = 400
+
+            logger.info(f'--------{status}----------')
+            time.sleep(2)
+
 
     def deliver_message(self, url, json, logger):
         try:

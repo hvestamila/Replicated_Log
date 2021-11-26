@@ -11,7 +11,7 @@ msg_container = MessageContainer()
 DELAY = int(os.getenv('DELAY', random.randint(1, 10)))
 
 
-@app.route('/health')
+@app.route('/health', methods=['GET'])
 def index():
     return 'OK'
 

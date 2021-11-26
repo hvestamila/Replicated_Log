@@ -1,15 +1,32 @@
 from flask import Flask, request
 from message_container import MessageContainer
 from multi_thread_processing import MultiThreadProcessing
+import json
+import os
+from celery_tasks import make_celery
+
 
 # from uuid import uuid4
 
 app = Flask(__name__)
-
 msg_container = MessageContainer()
-
 multi_threaded_process = MultiThreadProcessing()
 g_uid = 0
+celery = make_celery(app)
+
+# t2 = health_tick(url='http://localhost:5002/health',logger=app.logger)
+
+
+@celery.task()
+def health_tick(self, url, logger):
+    while True:
+        try:
+            status = requests.get(url=url).status_code
+        except Exception:
+            status = 400
+
+        logger.info(f'--------{status}----------')
+        time.sleep(2)
 
 
 def get_next_uid():
@@ -25,7 +42,9 @@ def index():
 
 @app.route('/messages', methods=['POST'])
 def save_msg():
-    income_msg = request.get_json()
+    # income_msg = request.get_json()
+    income_msg = request.get_data()
+    income_msg = json.loads(income_msg)
 
     msg = dict()
     try:
@@ -36,6 +55,7 @@ def save_msg():
 
     try:
         write_concern = int(income_msg["write_concern"]) - 1
+
     except:
         write_concern = len(multi_threaded_process.endpoints)
         app.logger.info(f'Missing write_concern parameter in JSON. Replaced with {write_concern}')
@@ -62,3 +82,7 @@ def return_msg():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+    url_1 = 'http://localhost:5001/health'
+    r = health_tick.delay(url=url_1,logger=app.logger)
+    x = send_mail.apply_async(args=[url_1, app.logger])
+    app.logger.info(f'Print----------- {x}')
