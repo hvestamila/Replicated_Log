@@ -2,31 +2,46 @@ from flask import Flask, request
 from message_container import MessageContainer
 from multi_thread_processing import MultiThreadProcessing
 import json
+import time
 import os
-from celery_tasks import make_celery
+import concurrent.futures
+import requests
 
-
+from multi_thread_processing import SECONDARY_FRST, SECONDARY_SCND
 # from uuid import uuid4
 
 app = Flask(__name__)
 msg_container = MessageContainer()
 multi_threaded_process = MultiThreadProcessing()
+statuses = {SECONDARY_FRST:'unhealthy',
+            SECONDARY_SCND:'unhealthy'}
 g_uid = 0
-celery = make_celery(app)
 
 # t2 = health_tick(url='http://localhost:5002/health',logger=app.logger)
+def health_setter(endpoint, status):
+    global statuses
+    if not statuses.get(endpoint) == status:
+        statuses.update({endpoint:status})
 
 
-@celery.task()
-def health_tick(self, url, logger):
+
+def health_getter(logger, endpoint):
+    bad_requests_count = 0
     while True:
         try:
-            status = requests.get(url=url).status_code
+            status = requests.get(endpoint+'/health').status_code
+            bad_requests_count = 0
         except Exception:
+            bad_requests_count += 1
             status = 400
+        if bad_requests_count >= 12:
+            health_setter(endpoint, 'unhealthy')
+        elif bad_requests_count >= 6:
+            health_setter(endpoint, 'suspected')
+        if bad_requests_count < 6:
+            health_setter(endpoint, 'healthy')
+        time.sleep(1)
 
-        logger.info(f'--------{status}----------')
-        time.sleep(2)
 
 
 def get_next_uid():
@@ -75,14 +90,20 @@ def save_msg():
     return 'New message successfully added', 201
 
 
+
+
 @app.route('/messages', methods=['GET'])
 def return_msg():
     return msg_container.get_all(), 200
 
 
 if __name__ == '__main__':
+    exec_1 = concurrent.futures.ThreadPoolExecutor()
+    exec_2 = concurrent.futures.ThreadPoolExecutor()
+    exec_1.submit(health_getter,
+                  endpoint=SECONDARY_FRST,
+                  logger=app.logger)
+    exec_2.submit(health_getter,
+                  endpoint=SECONDARY_SCND,
+                  logger=app.logger)
     app.run(host='0.0.0.0', port=5000)
-    url_1 = 'http://localhost:5001/health'
-    r = health_tick.delay(url=url_1,logger=app.logger)
-    x = send_mail.apply_async(args=[url_1, app.logger])
-    app.logger.info(f'Print----------- {x}')
