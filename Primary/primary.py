@@ -5,9 +5,6 @@ import json
 import time
 import os
 import concurrent.futures
-import requests
-
-from multi_thread_processing import SECONDARY_FRST, SECONDARY_SCND
 
 app = Flask(__name__)
 msg_container = MessageContainer()
@@ -72,9 +69,9 @@ if __name__ == '__main__':
     exec_1 = concurrent.futures.ThreadPoolExecutor()
     exec_2 = concurrent.futures.ThreadPoolExecutor()
     exec_1.submit(multi_threaded_process.health_process,
-                  endpoint=SECONDARY_FRST,
+                  endpoint=os.getenv('SECONDARY_FRST_BASE_PATH', 'http://localhost:5001'),
                   logger=app.logger)
     exec_2.submit(multi_threaded_process.health_process,
-                  endpoint=SECONDARY_SCND,
+                  endpoint=os.getenv('SECONDARY_SCND_BASE_PATH', 'http://localhost:5002'),
                   logger=app.logger)
     app.run(host='0.0.0.0', port=5000)

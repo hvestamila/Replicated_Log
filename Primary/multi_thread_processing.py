@@ -2,6 +2,7 @@ import concurrent.futures
 import requests
 import os
 import time
+from exceptions import HealthError
 
 
 SECONDARY_FRST = os.getenv('SECONDARY_FRST_BASE_PATH', 'http://localhost:5001')
@@ -14,12 +15,16 @@ class MultiThreadProcessing:
 
     def __init__(self):
         self.endpoints = [SECONDARY_FRST + '/messages', SECONDARY_SCND + '/messages']
-        self.health = {SECONDARY_FRST:'unhealthy',
-                    SECONDARY_SCND:'unhealthy'}
+        self.health = {SECONDARY_FRST:'suspected',
+                    SECONDARY_SCND:'suspected'}
 
     def deliver_message(self, url, json, logger):
         try:
-            response = requests.post(url=url, json=json)
+            if self.health.get(url.replace('/messages', '')) == 'healthy':
+                response = requests.post(url=url, json=json)
+            else:
+                raise HealthError(url.replace('/messages', ''),
+                 self.health.get(url.replace('/messages', '')))
         except Exception as err:
             logger.error(f'URL: {url}; Exception: {repr(err)}')
             return False
@@ -62,18 +67,20 @@ class MultiThreadProcessing:
 
 
     def health_process(self, logger, endpoint):
-        bad_requests_count = 0
+        bad_requests_count = 6
         while True:
             try:
                 status = self.health_getter(endpoint=endpoint)
-                bad_requests_count = 0
+                if bad_requests_count > 0:
+                    bad_requests_count -= 1
             except Exception:
-                bad_requests_count += 1
+                if bad_requests_count < 12:
+                    bad_requests_count += 1
                 status = 400
-            if bad_requests_count >= 12:
+            if bad_requests_count == 12:
                 self.health_setter(endpoint, 'unhealthy', logger)
-            elif bad_requests_count >= 6:
+            elif bad_requests_count == 6:
                 self.health_setter(endpoint, 'suspected', logger)
-            elif bad_requests_count < 6:
+            elif bad_requests_count == 0:
                 self.health_setter(endpoint, 'healthy', logger)
             time.sleep(1)
