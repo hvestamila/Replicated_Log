@@ -9,3 +9,4 @@ MarkupSafe==2.0.1
 pycparser==2.20
 six==1.16.0
 Werkzeug==2.0.2
+celery

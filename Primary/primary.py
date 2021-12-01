@@ -1,13 +1,13 @@
 from flask import Flask, request
 from message_container import MessageContainer
 from multi_thread_processing import MultiThreadProcessing
-
-# from uuid import uuid4
+import json
+import time
+import os
+import concurrent.futures
 
 app = Flask(__name__)
-
 msg_container = MessageContainer()
-
 multi_threaded_process = MultiThreadProcessing()
 g_uid = 0
 
@@ -25,7 +25,9 @@ def index():
 
 @app.route('/messages', methods=['POST'])
 def save_msg():
-    income_msg = request.get_json()
+    # income_msg = request.get_json()
+    income_msg = request.get_data()
+    income_msg = json.loads(income_msg)
 
     msg = dict()
     try:
@@ -36,6 +38,7 @@ def save_msg():
 
     try:
         write_concern = int(income_msg["write_concern"]) - 1
+
     except:
         write_concern = len(multi_threaded_process.endpoints)
         app.logger.info(f'Missing write_concern parameter in JSON. Replaced with {write_concern}')
@@ -55,10 +58,20 @@ def save_msg():
     return 'New message successfully added', 201
 
 
+
+
 @app.route('/messages', methods=['GET'])
 def return_msg():
     return msg_container.get_all(), 200
 
 
 if __name__ == '__main__':
+    exec_1 = concurrent.futures.ThreadPoolExecutor()
+    exec_2 = concurrent.futures.ThreadPoolExecutor()
+    exec_1.submit(multi_threaded_process.health_process,
+                  endpoint=os.getenv('SECONDARY_FRST_BASE_PATH', 'http://localhost:5001'),
+                  logger=app.logger)
+    exec_2.submit(multi_threaded_process.health_process,
+                  endpoint=os.getenv('SECONDARY_SCND_BASE_PATH', 'http://localhost:5002'),
+                  logger=app.logger)
     app.run(host='0.0.0.0', port=5000)
