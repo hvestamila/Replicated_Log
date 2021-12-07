@@ -26,6 +26,8 @@ def index():
 @app.route('/messages', methods=['POST'])
 def save_msg():
     # income_msg = request.get_json()
+    if not multi_threaded_process.isQuorum():
+        return 'No Quorum', 503 #Service Unavailable
     income_msg = request.get_data()
     income_msg = json.loads(income_msg)
 
@@ -58,20 +60,12 @@ def save_msg():
     return 'New message successfully added', 201
 
 
-
-
 @app.route('/messages', methods=['GET'])
 def return_msg():
     return msg_container.get_all(), 200
 
 
 if __name__ == '__main__':
-    exec_1 = concurrent.futures.ThreadPoolExecutor()
-    exec_2 = concurrent.futures.ThreadPoolExecutor()
-    exec_1.submit(multi_threaded_process.health_process,
-                  endpoint=os.getenv('SECONDARY_FRST_BASE_PATH', 'http://localhost:5001'),
-                  logger=app.logger)
-    exec_2.submit(multi_threaded_process.health_process,
-                  endpoint=os.getenv('SECONDARY_SCND_BASE_PATH', 'http://localhost:5002'),
-                  logger=app.logger)
+    multi_threaded_process.runHeardbeat(app.logger)
+
     app.run(host='0.0.0.0', port=5000)
