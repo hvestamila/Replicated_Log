@@ -15,4 +15,5 @@ class MessageContainer:
         for key in self.messages.keys():
             next_key = key+1
             if next_key not in self.messages.keys():
-                return {key: value for key, value in self.messages.items() if key < next_key}
+                filtered_dict = {key: value for key, value in self.messages.items() if key < next_key}
+                return dict(sorted(filtered_dict.items()))
